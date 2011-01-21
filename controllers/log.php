@@ -52,7 +52,8 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
         $this->data['entries'] = array();
         foreach ($entries as $entry)
         {
-            $entry->url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_update', array('entry' => $entry->guid), $this->request);
+            $entry->update_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_update', array('entry' => $entry->guid), $this->request);
+            $entry->delete_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_delete', array('entry' => $entry->guid), $this->request);
             $entry->sport = $this->get_sport($entry->activity);
             $this->data['entries'][] = $entry;
         }
