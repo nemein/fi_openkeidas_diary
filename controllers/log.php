@@ -13,11 +13,49 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
             $sports[$activity_id] = new fi_openkeidas_diary_activity();
             $sports[$activity_id]->get_by_id($activity_id);
         }
-        return $sports[$activity_id];
+        return $sports[$activity_id]->title;
+    }
+
+    private function get_sport_options()
+    {
+        $config_sports = midgardmvc_core::get_instance()->configuration->sports;
+        $options = array();
+        $mc = new midgard_collector('fi_openkeidas_diary_activity', 'metadata.deleted', false);
+        $mc->set_key_property('title');
+        $mc->add_value_property('id');
+        $mc->execute();
+        $sports = $mc->list_keys();
+        foreach ($config_sports as $sport)
+        {
+            if (!isset($sports[$sport]))
+            {
+                // Sync to DB
+                midgardmvc_core::get_instance()->authorization->enter_sudo('fi_openkeidas_diary'); 
+                $db_sport = new fi_openkeidas_diary_activity();
+                $db_sport->title = $sport;
+                $db_sport->create();
+                $options[] = array
+                (
+                    'description' => $sport,
+                    'value' => $db_sport->id,
+                );
+                midgardmvc_core::get_instance()->authorization->leave_sudo();
+                continue;
+            }
+
+            $options[] = array
+            (
+                'description' => $sport,
+                'value' => $mc->get_subkey($sport, 'id'),
+            );
+        }
+        return $options;
     }
 
     public function get_list(array $args)
     {
+        midgardmvc_core::get_instance()->authorization->require_user();
+
         $this->data['form'] = midgardmvc_helper_forms::create('fi_openkeidas_diary_logs');
         $this->data['form']->set_method('get');
 
@@ -65,6 +103,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
 
     public function load_object(array $args)
     {
+        midgardmvc_core::get_instance()->authorization->require_user();
         try {
             $this->object = new fi_openkeidas_diary_log($args['entry']);
         }
@@ -81,6 +120,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
     
     public function prepare_new_object(array $args)
     {
+        midgardmvc_core::get_instance()->authorization->require_user();
         $this->object = new fi_openkeidas_diary_log();
         $this->object->person = midgardmvc_core::get_instance()->authentication->get_person()->id;
     }
@@ -90,26 +130,22 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
         $this->form = midgardmvc_helper_forms::create('fi_openkeidas_diary_log');
 
         $sport = $this->form->add_field('activity', 'integer');
-        $sport->set_value($this->object->activity);
+        if ($this->object->activity)
+        {
+            $activity = $this->get_sport($this->object->activity);
+        }
+        
         $sport_widget = $sport->set_widget('selectoption');
         $sport_widget->set_label('Laji');
-        $sport_options = array();
-        /*foreach ($categories as $category)
-        {
-            $category_options[] = array
-            (
-                'description' => ucfirst($category),
-                'value' => $category,
-            );
-        }*/
-        $sport_widget->set_options($sport_options);
+        $sport_widget->set_options($this->get_sport_options());
 
         $date = $this->form->add_field('date', 'datetime', true);
-        $date->set_value($this->object->date);
-        if ($this->object->date->getTimestamp() == 0)
+        $object_date = $this->object->date;
+        if ($object_date->getTimestamp() == 0)
         {
-            $date->set_value(new DateTime());
+            $object_date->setTimestamp(time());
         }
+        $date->set_value($object_date);
         $date_widget = $date->set_widget('datetime');
         $date_widget->set_label('Päivämäärä');
 
@@ -126,7 +162,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
 
     public function get_url_read()
     {
-        return $this->get_url_update();
+        return midgardmvc_core::get_instance()->dispatcher->generate_url('index', array(), $this->request);
     }
 
     public function get_url_update()
