@@ -1,6 +1,63 @@
 <?php
 class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_baseclasses_crud
 {
+    private function get_sport($activity_id)
+    {
+        static $sports = array();
+        if (!isset($sports[$activity_id]))
+        {
+            $sports[$activity_id] = new fi_openkeidas_diary_activity();
+            $sports[$activity_id]->get_by_id($activity_id);
+        }
+        return $sports[$activity_id];
+    }
+
+    public function get_list(array $args)
+    {
+        $this->data['form'] = midgardmvc_helper_forms::create('fi_openkeidas_diary_logs');
+        $this->data['form']->set_method('get');
+
+        $from = $this->data['form']->add_field('from', 'datetime', true);
+        $from_widget = $from->set_widget('date');
+        $from_widget->set_label('Mistä');
+        if (isset($_GET['from']))
+        {
+            $from->set_value($_GET['from']);
+            $from->validate();
+        }
+        else
+        {
+            $from->set_value(new midgard_datetime('30 days ago'));
+        }
+
+        $to = $this->data['form']->add_field('to', 'datetime', true);
+        $to_widget = $to->set_widget('date');
+        $to_widget->set_label('Mihin');
+        if (isset($_GET['to']))
+        {
+            $to->set_value($_GET['to']);
+            $to->validate();
+        }
+        else
+        {
+            $to->set_value(new midgard_datetime());
+        }
+
+        $qb = new midgard_query_builder('fi_openkeidas_diary_log');
+        $qb->add_constraint('date', '>', $from->get_value());
+        $qb->add_constraint('date', '<', $to->get_value());
+        $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
+        $qb->add_order('date', 'DESC');
+        $entries = $qb->execute();
+        $this->data['entries'] = array();
+        foreach ($entries as $entry)
+        {
+            $entry->url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_update', array('entry' => $entry->guid), $this->request);
+            $entry->sport = $this->get_sport($entry->activity);
+            $this->data['entries'][] = $entry;
+        }
+    }
+
     public function load_object(array $args)
     {
         $this->object = new fi_openkeidas_diary_log($args['item']);
@@ -13,6 +70,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
     public function prepare_new_object(array $args)
     {
         $this->object = new fi_openkeidas_diary_log();
+        $this->object->person = midgardmvc_core::get_instance()->authentication->get_person()->id;
     }
 
     public function load_form()

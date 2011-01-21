@@ -2,20 +2,26 @@ requires:
     midgardmvc_helper_forms:
         - {type: github, user: midgardproject, repository: midgardmvc_helper_forms, branch: master}
 routes:
+    log_list:
+        path: '/logs'
+        controller: fi_openkeidas_diary_controllers_log
+        action: list
+        template_aliases: 
+            content: fod-list-logs
     log_create:
-        path: '/log'
+        path: '/logs/log'
         controller: fi_openkeidas_diary_controllers_log
         action: create
         template_aliases: 
             content: fod-edit-log
     log_update:
-        path: '/log/{$entry}/update'
+        path: '/logs/log/{$entry}/update'
         controller: fi_openkeidas_diary_controllers_log
         action: update
         template_aliases: 
             content: fod-edit-log
     log_delete:
-        path: '/log/{$entry}/delete'
+        path: '/logs/log/{$entry}/delete'
         controller: fi_openkeidas_diary_controllers_log
         action: delete
         template_aliases: 

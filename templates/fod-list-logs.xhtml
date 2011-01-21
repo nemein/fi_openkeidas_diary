@@ -1,0 +1,26 @@
+<h1>Liikuntapäiväkirjan merkinnät</h1>
+
+<tal:block tal:content="structure fi_openkeidas_diary/form" />
+
+<table tal:condition="fi_openkeidas_diary/entries">
+    <thead>
+        <tr>
+            <th>Päivämäärä</th>
+            <th>Laji</th>
+            <th>Kesto</th>
+            <th>Paikka</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr tal:repeat="entry fi_openkeidas_diary/entries">
+            <td tal:content="php:entry.date.format('d.m.Y')">28.1.2011</td>
+            <td><a tal:attributes="href entry/url" tal:content="entry/sport">Hiihto</a></td>
+            <td><span tal:content="entry/duration">12</span>h</td>
+            <td tal:content="entry/location">Pururata</td>
+        </tr>
+    </tbody>
+</table>
+
+<p tal:condition="not: fi_openkeidas_diary/entries">
+    Ei merkintöjä
+</p>
