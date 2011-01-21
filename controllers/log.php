@@ -87,7 +87,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
 
         $qb = new midgard_query_builder('fi_openkeidas_diary_log');
         $qb->add_constraint('date', '>', $from->get_value());
-        $qb->add_constraint('date', '<', $to->get_value());
+        $qb->add_constraint('date', '<=', $to->get_value());
         $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
         $qb->add_order('date', 'DESC');
         $entries = $qb->execute();
@@ -146,7 +146,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
             $object_date->setTimestamp(time());
         }
         $date->set_value($object_date);
-        $date_widget = $date->set_widget('datetime');
+        $date_widget = $date->set_widget('date');
         $date_widget->set_label('Päivämäärä');
 
         $duration = $this->form->add_field('duration', 'float', true);
