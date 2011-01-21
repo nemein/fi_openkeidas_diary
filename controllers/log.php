@@ -3,6 +3,10 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
 {
     private function get_sport($activity_id)
     {
+        if ($activity_id == 0)
+        {
+            return 'Tuntematon';
+        }
         static $sports = array();
         if (!isset($sports[$activity_id]))
         {
@@ -61,7 +65,14 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
 
     public function load_object(array $args)
     {
-        $this->object = new fi_openkeidas_diary_log($args['item']);
+        try {
+            $this->object = new fi_openkeidas_diary_log($args['entry']);
+        }
+        catch (midgard_error_exception $e)
+        {
+            throw new midgardmvc_exception_notfound($e->getMessage());
+        }
+
         if ($this->object->person != midgardmvc_core::get_instance()->authentication->get_person()->id)
         {
             throw new midgardmvc_exception_unauthorized("You can only access your own logs");
