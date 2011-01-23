@@ -1,6 +1,9 @@
 requires:
     midgardmvc_helper_forms:
         - {type: github, user: midgardproject, repository: midgardmvc_helper_forms, branch: master}
+requires_pear:
+    Graph:
+        channel: components.ez.no
 process_injector: fi_openkeidas_diary
 routes:
     index:
@@ -31,6 +34,10 @@ routes:
         path: '/stats'
         controller: fi_openkeidas_diary_controllers_stats
         action: show
+    stats_graph:
+        path: '/stats/graph.png'
+        controller: fi_openkeidas_diary_controllers_stats
+        action: graph
     stats_update:
         path: '/stats/update'
         controller: fi_openkeidas_diary_controllers_stats

@@ -32,7 +32,7 @@ class fi_openkeidas_diary_controllers_stats
             {
                 return 0;
             }
-            return array(0);
+            return array(date('d.m.Y') => 0);
         }
 
         if ($limit == 1)
@@ -43,7 +43,7 @@ class fi_openkeidas_diary_controllers_stats
         $values = array();
         foreach ($stats as $stat)
         {
-            $values[$stat->date] = round($stat->value, 1);
+            $values[$stat->date->format('d.m.Y')] = round($stat->value, 1);
         }
         return $values;
     }
@@ -51,13 +51,44 @@ class fi_openkeidas_diary_controllers_stats
     public function get_show(array $args)
     {
         midgardmvc_core::get_instance()->authorization->require_user();
-
         $this->data['stats'] = array
         (
             'bmi' => $this->get_stat('bmi', 1),
             'weight' => $this->get_stat('weight', 1),
             'cooper' => $this->get_stat('cooper', 1),
         );
+    }
+
+    public function get_graph(array $args)
+    {
+        midgardmvc_core::get_instance()->authorization->require_user();
+
+        $since = new midgard_datetime('6 months ago');
+        $this->data['stats'] = array
+        (
+            'bmi' => $this->get_stat('bmi', null, $since),
+            'weight' => $this->get_stat('weight', null, $since),
+            'cooper' => $this->get_stat('cooper', null, $since),
+        );
+
+        midgardmvc_core::get_instance()->component->load_library('Graph');
+        $graph = new ezcGraphLineChart();
+        foreach ($this->data['stats'] as $name => $stats)
+        {
+            $graph->data[$this->get_label($name)] = new ezcGraphArrayDataSet(array_reverse($stats, true));
+            $graph->data[$this->get_label($name)]->symbol = ezcGraph::BULLET;
+        }
+
+        $graph->driver = new fi_openkeidas_diary_graph_gd();
+        $graph->driver->options->imageFormat = IMG_PNG;
+        $graph->options->font = midgardmvc_core::get_instance()->configuration->graph_font;
+        $graph->legend->position = ezcGraph::BOTTOM;
+
+        // render image directly to screen
+        $graph->renderToOutput(380, 200);
+
+        // wrap up the request
+        midgardmvc_core::get_instance()->dispatcher->end_request();
     }
 
     public function get_update(array $args)
@@ -102,6 +133,23 @@ class fi_openkeidas_diary_controllers_stats
             $this->data['stats'][$name] = $this->form->$name->get_value();
         }
         $transaction->commit();
+    }
+
+    private function get_label($stat)
+    {
+        switch ($stat)
+        {
+            case 'bmi':
+                return 'BMI';
+            case 'cooper':
+                return 'Cooper';
+            case 'weight':
+                return 'Paino';
+            case 'height':
+                return 'Pituus';
+            default:
+                return ucfirst($stat);
+        }
     }
 
     private function load_form()
