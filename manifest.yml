@@ -27,6 +27,16 @@ routes:
         action: delete
         template_aliases: 
             content: fod-delete-log
+    stats_show:
+        path: '/stats'
+        controller: fi_openkeidas_diary_controllers_stats
+        action: show
+    stats_update:
+        path: '/stats/update'
+        controller: fi_openkeidas_diary_controllers_stats
+        action: update
+        template_aliases: 
+            content: fod-update-stats
     top_activities:
         path: '/activities'
         controller: fi_openkeidas_diary_controllers_activity

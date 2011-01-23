@@ -1,0 +1,28 @@
+<h1>Perustiedot</h1>
+
+<div id="fi_openkeidas_diary_stats" tal:content="structure fi_openkeidas_diary/form">
+</div>
+
+<script>
+jQuery(document).ready(function() {
+    var statsForm = jQuery('#fi_openkeidas_diary_stats > form');
+    var bmiInput = jQuery(statsForm.find('input[name="bmi"]'));
+    var updateBMI = function(height, weight) {
+        if (   height == 0
+            || weight == 0) {
+            return;
+        }
+        var height = height / 100;
+        var BMI = weight / (height * height);
+        bmiInput.val(BMI.toFixed(1));
+    };
+    var weightInput = jQuery(statsForm.find('input[name="weight"]'));
+    weightInput.change(function() {
+        updateBMI(heightInput.val(), jQuery(this).val());
+    });
+    var heightInput = jQuery(statsForm.find('input[name="height"]'));
+    heightInput.change(function() {
+        updateBMI(jQuery(this).val(), weightInput.val());
+    });
+});
+</script>

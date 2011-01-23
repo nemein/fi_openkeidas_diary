@@ -4,7 +4,7 @@
         <property name="id" type="unsigned integer" primaryfield="id">
             <description>Local non-replication-safe database identifier</description>
         </property>
-        <property name="title" type="string" />
+        <property name="title" type="string" index="yes" />
     </type>
 
     <type name="fi_openkeidas_diary_log" table="fi_openkeidas_diary_log" parent="midgard_person">
@@ -12,9 +12,19 @@
             <description>Local non-replication-safe database identifier</description>
         </property>
         <property name="person" type="unsigned integer" link="midgard_person:id" parentfield="person" />
-        <property name="date" type="datetime" />
+        <property name="date" type="datetime" index="yes" />
         <property name="activity" type="unsigned integer" link="fi_openkeidas_diary_activity:id" />
         <property name="location" type="string" />
         <property name="duration" type="float" />
+    </type>
+
+    <type name="fi_openkeidas_diary_stat" table="fi_openkeidas_diary_stat" parent="midgard_person">
+        <property name="id" type="unsigned integer" primaryfield="id">
+            <description>Local non-replication-safe database identifier</description>
+        </property>
+        <property name="person" type="unsigned integer" link="midgard_person:id" parentfield="person" />
+        <property name="date" type="datetime" index="yes" />
+        <property name="stat" type="string" index="yes" />
+        <property name="value" type="float" />
     </type>
 </Schema>
