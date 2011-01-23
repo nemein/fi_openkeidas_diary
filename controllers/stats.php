@@ -83,9 +83,10 @@ class fi_openkeidas_diary_controllers_stats
         $graph->driver->options->imageFormat = IMG_PNG;
         $graph->options->font = midgardmvc_core::get_instance()->configuration->graph_font;
         $graph->legend->position = ezcGraph::BOTTOM;
+        $graph->palette = new ezcGraphPaletteEz();
 
         // render image directly to screen
-        $graph->renderToOutput(380, 200);
+        $graph->renderToOutput(575, 200);
 
         // wrap up the request
         midgardmvc_core::get_instance()->dispatcher->end_request();
