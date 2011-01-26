@@ -8,6 +8,22 @@ class fi_openkeidas_diary_controllers_stats
         $this->request = $request;
     }
 
+    private function has_stats()
+    {
+        $qb = new midgard_query_builder('fi_openkeidas_diary_stat');
+        $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
+        $qb->add_constraint('stat', 'IN', array('bmi', 'weight'));
+        $since = new midgard_datetime('6 months ago');
+        $qb->add_constraint('date', '>', $since);
+        $qb->set_limit(1);
+        $stats = $qb->execute();
+        if (count($stats) == 0)
+        {
+            return false;
+        }
+        return true;
+    }
+
     private function get_stat($stat, $limit = null, midgard_datetime $since = null)
     {
         $qb = new midgard_query_builder('fi_openkeidas_diary_stat');
@@ -106,6 +122,8 @@ class fi_openkeidas_diary_controllers_stats
 
         $this->load_form();
         $this->data['form'] = $this->form;
+
+        $this->data['has_stats'] = $this->has_stats();
     }
 
     public function post_update(array $args)
