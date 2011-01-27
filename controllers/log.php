@@ -130,11 +130,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
         $this->form = midgardmvc_helper_forms::create('fi_openkeidas_diary_log');
 
         $sport = $this->form->add_field('activity', 'integer');
-        if ($this->object->activity)
-        {
-            $activity = $this->get_sport($this->object->activity);
-        }
-        
+        $sport->set_value($this->object->activity);
         $sport_widget = $sport->set_widget('selectoption');
         $sport_widget->set_label('Laji');
         $sport_widget->set_options($this->get_sport_options());
@@ -152,7 +148,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
         $duration = $this->form->add_field('duration', 'float', true);
         $duration->set_value($this->object->duration);
         $duration_widget = $duration->set_widget('number');
-        $duration_widget->set_label('Kesto');
+        $duration_widget->set_label('Aika tunteina (esim. 0.5)');
 
         $location = $this->form->add_field('location', 'text');
         $location->set_value($this->object->location);
