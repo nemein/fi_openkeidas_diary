@@ -137,7 +137,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
 
         $date = $this->form->add_field('date', 'datetime', true);
         $object_date = $this->object->date;
-        if ($object_date->getTimestamp() == 0)
+        if ($object_date->getTimestamp() <= 0)
         {
             $object_date->setTimestamp(time());
         }
