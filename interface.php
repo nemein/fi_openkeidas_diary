@@ -9,11 +9,11 @@ class fi_openkeidas_diary
             return;
         }
         // Subscribe to content changed signals from Midgard
-        midgard_object_class::connect_default('fi_openkeidas_diary_log', 'action-created', array('fi_openkeidas_diary', 'update_sport'), array($request));
+        midgard_object_class::connect_default('fi_openkeidas_diary_log', 'action-created', array('fi_openkeidas_diary', 'update_sport_and_group'), array($request));
         $connected = true;
     }
 
-    public static function update_sport(fi_openkeidas_diary_log $log, $params)
+    public static function update_sport_and_group(fi_openkeidas_diary_log $log, $params)
     {
         if (!$log->activity)
         {
@@ -25,6 +25,17 @@ class fi_openkeidas_diary
         $activity->get_by_id($log->activity);
         $activity->metadata->score++;
         $activity->update();
+
+        $qb = new midgard_query_builder('fi_openkeidas_groups_group_member');
+        $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
+        $qb->add_constraint('metadata.isapproved', '=', true);
+        $memberships = $qb->execute();
+        foreach ($memberships as $membership)
+        {
+            $group = new fi_openkeidas_groups_group($membership->grp);
+            $group->metadata->score++;
+            $group->update();
+        }
         midgardmvc_core::get_instance()->authorization->leave_sudo();
     }
 
@@ -43,5 +54,32 @@ class fi_openkeidas_diary
             $value += $entry->duration;
         }
         return $value;
+    }
+
+    public static function group_average_duration_this_week(fi_openkeidas_groups_group $group)
+    {
+        midgardmvc_core::get_instance()->authorization->require_user();
+        $mc = new midgard_collector('fi_openkeidas_groups_group_member', 'grp', $group->id);
+        $mc->add_constraint('metadata.isapproved', '=', true);
+        $mc->set_key_property('person');
+        $mc->execute();
+        $member_ids = array_keys($mc->list_keys());
+        $member_count = count($member_ids);
+        if ($member_count == 0)
+        {
+            return 0;
+        }
+
+        $total = 0;
+        $qb = new midgard_query_builder('fi_openkeidas_diary_log');
+        $qb->add_constraint('person', 'IN', $member_ids);
+        $qb->add_constraint('date', '>', new midgard_datetime('1 week ago'));
+        $qb->add_constraint('date', '<', new midgard_datetime());
+        $entries = $qb->execute();
+        foreach ($entries as $entry)
+        {
+            $total += $entry->duration;
+        }
+        return round($total / $member_count, 1);
     }
 }
