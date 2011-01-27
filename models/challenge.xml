@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Schema xmlns="http://www.midgard-project.org/repligard/1.4">
+    <type name="fi_openkeidas_diary_challenge" table="fi_openkeidas_diary_challenge" parent="fi_openkeidas_groups_group">
+        <property name="id" type="unsigned integer" primaryfield="id">
+            <description>Local non-replication-safe database identifier</description>
+        </property>
+        <property name="title" type="string" />
+        <property name="start" type="datetime" index="yes" />
+        <property name="enddate" type="datetime" index="yes" />
+        <property name="activity" type="unsigned integer" link="fi_openkeidas_diary_activity:id" />
+        <property name="measure" type="string" />
+        <property name="target" type="float" />
+        <property name="challenger" type="unsigned integer" link="fi_openkeidas_groups_group:id" parentfield="challenger" />
+    </type>
+
+    <type name="fi_openkeidas_diary_challenge_participant" table="fi_openkeidas_diary_challenge_participant" parent="fi_openkeidas_diary_challenge">
+        <property name="id" type="unsigned integer" primaryfield="id">
+            <description>Local non-replication-safe database identifier</description>
+        </property>
+        <property name="grp" type="unsigned integer" link="fi_openkeidas_groups_group:id" />
+        <property name="challenge" type="unsigned integer" link="fi_openkeidas_diary_challenge:id" parentfield="challenge" />
+    </type>
+</Schema>

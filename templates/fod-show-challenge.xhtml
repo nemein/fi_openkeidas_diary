@@ -1,0 +1,22 @@
+<h1 tal:content="fi_openkeidas_diary/object/title">Haaste</h1>
+
+<p>
+    Haastaja: <span tal:content="fi_openkeidas_diary/challenger/title">Ryhmä</span>
+</p>
+
+<div tal:condition="fi_openkeidas_diary/groups">
+    <h2>Osallistujat</h2>
+
+    <ul>
+        <li tal:repeat="group fi_openkeidas_diary/groups">
+            <a tal:attributes="href group/url" tal:content="group/title">Opettajanhuone</a>
+            <span tal:content="group/activity">13</span>h
+        </li>
+    </ul>
+</div>
+
+<p tal:condition="fi_openkeidas_diary/is_challenger">
+    <a class="button" tal:attributes="href fi_openkeidas_diary/groups_url">Etsi haastettavia ryhmiä</a>
+    <a class="button" tal:attributes="href fi_openkeidas_diary/update_url">Muokkaa</a>
+    <a class="button" tal:attributes="href fi_openkeidas_diary/delete_url">Poista</a>
+</p>

@@ -12,6 +12,12 @@ routes:
         action: list
         template_aliases: 
             content: fod-list-logs
+    logs_compare:
+        path: '/compare'
+        controller: fi_openkeidas_diary_controllers_log
+        action: list_compare
+        template_aliases: 
+            content: fod-list-logs
     log_create:
         path: '/log'
         controller: fi_openkeidas_diary_controllers_log
@@ -48,3 +54,35 @@ routes:
         path: '/activities'
         controller: fi_openkeidas_diary_controllers_activity
         action: top
+    challenge_create:
+        path: '/challenge'
+        controller: fi_openkeidas_diary_controllers_challenge
+        action: create
+        template_aliases: 
+            content: fod-edit-challenge
+    challenge_read:
+        path: '/challenge/{$challenge}'
+        controller: fi_openkeidas_diary_controllers_challenge
+        action: read
+        template_aliases: 
+            content: fod-show-challenge
+    challenge_update:
+        path: '/challenge/{$challenge}/update'
+        controller: fi_openkeidas_diary_controllers_challenge
+        action: update
+        template_aliases: 
+            content: fod-edit-challenge
+    challenge_delete:
+        path: '/challenge/{$challenge}/delete'
+        controller: fi_openkeidas_diary_controllers_challenge
+        action: delete
+        template_aliases: 
+            content: fod-delete-challenge
+    challenge_challenge:
+        path: '/challenge/{$challenge}/challenge/{$group}'
+        controller: fi_openkeidas_diary_controllers_challenge
+        action: challenge
+    challenge_accept:
+        path: '/challenge/{$challenge}/accept/{$participant}'
+        controller: fi_openkeidas_diary_controllers_challenge
+        action: accept

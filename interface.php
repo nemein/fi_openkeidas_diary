@@ -10,7 +10,35 @@ class fi_openkeidas_diary
         }
         // Subscribe to content changed signals from Midgard
         midgard_object_class::connect_default('fi_openkeidas_diary_log', 'action-created', array('fi_openkeidas_diary', 'update_sport_and_group'), array($request));
+        midgard_object_class::connect_default('fi_openkeidas_diary_challenge', 'action-created', array('fi_openkeidas_diary', 'update_challenge_members'), array($request));
         $connected = true;
+    }
+
+    public static function update_challenge_members(fi_openkeidas_diary_challenge $challenge, $params)
+    {
+        if (!$challenge->challenger)
+        {
+            return;
+        }
+
+        midgardmvc_core::get_instance()->authorization->enter_sudo('fi_openkeidas_diary');
+        $participant = new fi_openkeidas_diary_challenge_participant();
+        $participant->grp = $challenge->challenger;
+        $participant->challenge = $challenge->id;
+        $participant->create();
+        $participant->approve();
+
+        if (   isset($_POST['challenged'])
+            && $_POST['challenged'] != $challenge->challenger)
+        {
+            midgardmvc_core::get_instance()->authorization->enter_sudo('fi_openkeidas_diary');
+            $participant = new fi_openkeidas_diary_challenge_participant();
+            $participant->grp = (int) $_POST['challenged'];
+            $participant->challenge = $challenge->id;
+            $participant->create();
+            midgardmvc_core::get_instance()->authorization->leave_sudo();
+        }
+        midgardmvc_core::get_instance()->authorization->leave_sudo();
     }
 
     public static function update_sport_and_group(fi_openkeidas_diary_log $log, $params)
