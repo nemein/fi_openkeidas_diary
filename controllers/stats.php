@@ -79,19 +79,66 @@ class fi_openkeidas_diary_controllers_stats
     {
         midgardmvc_core::get_instance()->authorization->require_user();
 
+        $stat_types = array('bmi', 'weight');
+
+        $qb = new midgard_query_builder('fi_openkeidas_diary_stat');
+        $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
+        $qb->add_constraint('stat', 'IN', $stat_types);
+        $qb->add_order('date', 'ASC');
         $since = new midgard_datetime('6 months ago');
-        $this->data['stats'] = array
-        (
-            'bmi' => $this->get_stat('bmi', null, $since),
-            'weight' => $this->get_stat('weight', null, $since),
-            'cooper' => $this->get_stat('cooper', null, $since),
-        );
+        $qb->add_constraint('date', '>', $since);
+        $stats = $qb->execute();
+        if (empty($stats))
+        {
+            throw new midgardmvc_exception_notfound("No stats found");
+        }
+
+        $dates = array();
+        foreach ($stats as $stat)
+        {
+            $date = $stat->date->format('d.m.Y');
+            if (!isset($dates[$date]))
+            {
+                $dates[$date] = array();
+            }
+            $dates[$date][] = $stat;
+        }
+
+        $previous_value = array();
+        $this->data['stats'] = array();
+        foreach ($dates as $date => $stats)
+        {
+            foreach ($stats as $stat)
+            {
+                if (!isset($this->data['stats'][$stat->stat]))
+                {
+                    $this->data['stats'][$stat->stat] = array();
+                }
+                $value = round($stat->value, 1);
+                $this->data['stats'][$stat->stat][$date] = $value;
+                $previous_value[$stat->stat] = $value;
+            }
+
+            foreach ($stat_types as $stat_type)
+            {
+                if (!isset($this->data['stats'][$stat_type]))
+                {
+                    continue;
+                }
+
+                if (   !isset($this->data['stats'][$stat_type][$date])
+                    && isset($previous_value[$stat_type]))
+                {
+                    $this->data['stats'][$stat_type][$date] = $previous_value[$stat_type];
+                }
+            }
+        }
 
         midgardmvc_core::get_instance()->component->load_library('Graph');
         $graph = new ezcGraphLineChart();
         foreach ($this->data['stats'] as $name => $stats)
         {
-            $graph->data[$this->get_label($name)] = new ezcGraphArrayDataSet(array_reverse($stats, true));
+            $graph->data[$this->get_label($name)] = new ezcGraphArrayDataSet($stats);
             $graph->data[$this->get_label($name)]->symbol = ezcGraph::BULLET;
         }
 
