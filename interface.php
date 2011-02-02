@@ -27,17 +27,6 @@ class fi_openkeidas_diary
         $participant->challenge = $challenge->id;
         $participant->create();
         $participant->approve();
-
-        if (   isset($_POST['challenged'])
-            && $_POST['challenged'] != $challenge->challenger)
-        {
-            midgardmvc_core::get_instance()->authorization->enter_sudo('fi_openkeidas_diary');
-            $participant = new fi_openkeidas_diary_challenge_participant();
-            $participant->grp = (int) $_POST['challenged'];
-            $participant->challenge = $challenge->id;
-            $participant->create();
-            midgardmvc_core::get_instance()->authorization->leave_sudo();
-        }
         midgardmvc_core::get_instance()->authorization->leave_sudo();
     }
 

@@ -123,14 +123,6 @@ class fi_openkeidas_diary_controllers_challenge extends midgardmvc_core_controll
         $challenger_widget->set_label('Haastaja');
         $challenger_widget->set_options($group_options);
 
-        if (!$this->object->guid)
-        {
-            $challenged = $this->form->add_field('challenged', 'integer');
-            $challenged_widget = $challenged->set_widget('selectoption');
-            $challenged_widget->set_label('Haastettu');
-            $challenged_widget->set_options(array_reverse($group_options, true));
-        }
-
         $start = $this->form->add_field('start', 'datetime', true);
         $object_start = $this->object->start;
         if ($object_start->getTimestamp() <= 0)
