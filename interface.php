@@ -11,6 +11,7 @@ class fi_openkeidas_diary
         // Subscribe to content changed signals from Midgard
         midgard_object_class::connect_default('fi_openkeidas_diary_log', 'action-created', array('fi_openkeidas_diary', 'update_sport_and_group'), array($request));
         midgard_object_class::connect_default('fi_openkeidas_diary_challenge', 'action-created', array('fi_openkeidas_diary', 'update_challenge_members'), array($request));
+        midgard_object_class::connect_default('fi_openkeidas_diary_challenge', 'action-delete', array('fi_openkeidas_diary', 'remove_challenge_members'), array($request));
         $connected = true;
     }
 
@@ -28,6 +29,22 @@ class fi_openkeidas_diary
         $participant->create();
         $participant->approve();
         midgardmvc_core::get_instance()->authorization->leave_sudo();
+    }
+
+    public static function remove_challenge_members(fi_openkeidas_diary_challenge $challenge, $params)
+    {
+        midgardmvc_core::get_instance()->authorization->enter_sudo('fi_openkeidas_diary');
+
+        $qb = new midgard_query_builder('fi_openkeidas_diary_challenge_participant');
+        $qb->add_constraint('challenge', '=', $challenge->id);
+        $participants = $qb->execute();
+        foreach ($participants as $participant)
+        {
+            $participant->delete();
+        }
+
+        midgardmvc_core::get_instance()->authorization->leave_sudo();
+        
     }
 
     public static function update_sport_and_group(fi_openkeidas_diary_log $log, $params)
