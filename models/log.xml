@@ -16,6 +16,8 @@
         <property name="activity" type="unsigned integer" link="fi_openkeidas_diary_activity:id" />
         <property name="location" type="string" />
         <property name="duration" type="float" />
+        <property name="distance" type="float" />
+        <property name="comment" type="text" />
     </type>
 
     <type name="fi_openkeidas_diary_stat" table="fi_openkeidas_diary_stat" parent="midgard_person">

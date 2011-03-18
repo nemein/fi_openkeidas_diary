@@ -1,7 +1,7 @@
 <?php
 class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_baseclasses_crud
 {
-    private function get_sport($activity_id)
+    public static function get_sport($activity_id)
     {
         if ($activity_id == 0)
         {
@@ -90,15 +90,19 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
         $qb->add_constraint('date', '<=', $to->get_value());
         $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
         $qb->add_order('date', 'DESC');
-        $entries = $qb->execute();
-        $this->data['entries'] = array();
-        foreach ($entries as $entry)
-        {
-            $entry->update_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_update', array('entry' => $entry->guid), $this->request);
-            $entry->delete_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_delete', array('entry' => $entry->guid), $this->request);
-            $entry->sport = $this->get_sport($entry->activity);
-            $this->data['entries'][] = $entry;
-        }
+
+        $request = $this->request;
+        $this->data['entries'] = array_map
+        (
+            function ($entry) use ($request)
+            {
+                $entry->update_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_update', array('entry' => $entry->guid), $request);
+                $entry->delete_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_delete', array('entry' => $entry->guid), $request);
+                $entry->sport = fi_openkeidas_diary_controllers_log::get_sport($entry->activity);
+                return $entry;
+            },
+            $qb->execute()
+        );
     }
 
     public function load_object(array $args)
@@ -150,10 +154,20 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
         $duration_widget = $duration->set_widget('number');
         $duration_widget->set_label('Aika tunteina (esim. 0.5)');
 
+        $distance = $this->form->add_field('distance', 'float');
+        $distance->set_value($this->object->distance);
+        $distance_widget = $distance->set_widget('number');
+        $distance_widget->set_label('Kilometrit (esim. 3.5)');
+
         $location = $this->form->add_field('location', 'text');
         $location->set_value($this->object->location);
         $location_widget = $location->set_widget('text');
         $location_widget->set_label('Paikka');
+        
+        $comment = $this->form->add_field('comment', 'text');
+        $comment->set_value($this->object->comment);
+        $comment_widget = $comment->set_widget('textarea');
+        $comment_widget->set_label('Lisätiedot');
     }
 
     public function get_url_read()

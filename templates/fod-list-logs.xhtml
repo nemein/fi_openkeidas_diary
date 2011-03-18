@@ -12,6 +12,7 @@
             <th>Päivämäärä</th>
             <th>Laji</th>
             <th>Kesto</th>
+            <th>Matka</th>
             <th>Paikka</th>
             <th></th>
         </tr>
@@ -20,7 +21,8 @@
         <tr tal:repeat="entry fi_openkeidas_diary/entries">
             <td tal:content="php:entry.date.format('d.m.Y')">28.1.2011</td>
             <td tal:content="entry/sport">Hiihto</td>
-            <td><span tal:content="entry/duration">12</span>h</td>
+            <td><span tal:content="entry/duration">1.5</span>h</td>
+            <td><span tal:content="entry/distance">5</span>km</td>
             <td tal:content="entry/location">Pururata</td>
             <td class="actions">
                 <a tal:attributes="href entry/update_url" class="button">Muokkaa</a>
