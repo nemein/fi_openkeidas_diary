@@ -4,6 +4,10 @@
     Haastaja: <span tal:content="fi_openkeidas_diary/challenger/title">Ryhmä</span>
 </p>
 
+<p tal:condition="fi_openkeidas_diary/object/activityobject">
+    Laji: <span tal:content="fi_openkeidas_diary/object/activityobject/title">Hiihto</span>
+</p>
+
 <div tal:condition="fi_openkeidas_diary/groups">
     <h2>Osallistujat</h2>
 

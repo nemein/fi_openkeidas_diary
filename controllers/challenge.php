@@ -70,6 +70,13 @@ class fi_openkeidas_diary_controllers_challenge extends midgardmvc_core_controll
             $this->data['update_url'] = $this->get_url_update();
             $this->data['delete_url'] = midgardmvc_core::get_instance()->dispatcher->generate_url('challenge_delete', array('challenge' => $this->object->guid), $this->request);
         }
+        
+        $activityobject = null;
+        if ($this->object->activity)
+        {
+            $activityobject = fi_openkeidas_diary_activities::get($this->object->activity);
+        }
+        $this->object->activityobject = $activityobject;
 
         $this->data['challenger'] = new fi_openkeidas_groups_group($this->object->challenger);
 
@@ -86,13 +93,16 @@ class fi_openkeidas_diary_controllers_challenge extends midgardmvc_core_controll
         $qb = new midgard_query_builder('fi_openkeidas_groups_group');
         $qb->add_constraint('id', 'IN', $grp_ids);
         $qb->add_order('metadata.score', 'DESC');
-        $groups = $qb->execute();
-        foreach ($groups as $group)
-        {
-            $group->url = midgardmvc_core::get_instance()->dispatcher->generate_url('group_read', array('group' => $group->guid), 'fi_openkeidas_groups');
-            $group->activity = fi_openkeidas_diary_logs::group_duration_this_week($group);
-            $this->data['groups'][] = $group;
-        }
+        $this->data['groups'] = array_map
+        (
+            function ($group) use ($activityobject)
+            {
+                $group->url = midgardmvc_core::get_instance()->dispatcher->generate_url('group_read', array('group' => $group->guid), 'fi_openkeidas_groups');
+                $group->activity = fi_openkeidas_diary_logs::group_duration_this_week($group, $activityobject);
+                return $group;
+            },
+            $qb->execute()
+        );
     }
 
     public function load_form()
@@ -118,6 +128,22 @@ class fi_openkeidas_diary_controllers_challenge extends midgardmvc_core_controll
         $challenger_widget = $challenger->set_widget('selectoption');
         $challenger_widget->set_label('Haastaja');
         $challenger_widget->set_options($group_options);
+
+        $sport = $this->form->add_field('activity', 'integer');
+        $sport->set_value($this->object->activity);
+        $sport_widget = $sport->set_widget('selectoption');
+        $sport_widget->set_label('Laji');
+        $options = fi_openkeidas_diary_activities::get_options();
+        array_unshift
+        (
+            $options,
+            array
+            (
+                'description' => 'Kaikki',
+                'value' => '',
+            )
+        );
+        $sport_widget->set_options($options);
 
         $start = $this->form->add_field('start', 'datetime', true);
         $object_start = $this->object->start;
