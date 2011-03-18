@@ -72,48 +72,4 @@ class fi_openkeidas_diary
         }
         midgardmvc_core::get_instance()->authorization->leave_sudo();
     }
-
-    public static function duration_this_week()
-    {
-        midgardmvc_core::get_instance()->authorization->require_user();
-
-        $value = 0;
-        $qb = new midgard_query_builder('fi_openkeidas_diary_log');
-        $qb->add_constraint('date', '>', new midgard_datetime('1 week ago'));
-        $qb->add_constraint('date', '<', new midgard_datetime());
-        $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
-        $entries = $qb->execute();
-        foreach ($entries as $entry)
-        {
-            $value += $entry->duration;
-        }
-        return $value;
-    }
-
-    public static function group_average_duration_this_week(fi_openkeidas_groups_group $group)
-    {
-        midgardmvc_core::get_instance()->authorization->require_user();
-        $mc = new midgard_collector('fi_openkeidas_groups_group_member', 'grp', $group->id);
-        $mc->add_constraint('metadata.isapproved', '=', true);
-        $mc->set_key_property('person');
-        $mc->execute();
-        $member_ids = array_keys($mc->list_keys());
-        $member_count = count($member_ids);
-        if ($member_count == 0)
-        {
-            return 0;
-        }
-
-        $total = 0;
-        $qb = new midgard_query_builder('fi_openkeidas_diary_log');
-        $qb->add_constraint('person', 'IN', $member_ids);
-        $qb->add_constraint('date', '>', new midgard_datetime('1 week ago'));
-        $qb->add_constraint('date', '<', new midgard_datetime());
-        $entries = $qb->execute();
-        foreach ($entries as $entry)
-        {
-            $total += $entry->duration;
-        }
-        return round($total / $member_count, 1);
-    }
 }

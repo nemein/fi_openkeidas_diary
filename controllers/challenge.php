@@ -90,7 +90,7 @@ class fi_openkeidas_diary_controllers_challenge extends midgardmvc_core_controll
         foreach ($groups as $group)
         {
             $group->url = midgardmvc_core::get_instance()->dispatcher->generate_url('group_read', array('group' => $group->guid), 'fi_openkeidas_groups');
-            $group->activity = fi_openkeidas_diary::group_average_duration_this_week($group);
+            $group->activity = fi_openkeidas_diary_logs::group_duration_this_week($group);
             $this->data['groups'][] = $group;
         }
     }

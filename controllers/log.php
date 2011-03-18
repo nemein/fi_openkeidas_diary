@@ -1,65 +1,45 @@
 <?php
 class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_baseclasses_crud
 {
-    public static function get_sport($activity_id)
-    {
-        if ($activity_id == 0)
-        {
-            return 'Tuntematon';
-        }
-        static $sports = array();
-        if (!isset($sports[$activity_id]))
-        {
-            $sports[$activity_id] = new fi_openkeidas_diary_activity();
-            $sports[$activity_id]->get_by_id($activity_id);
-        }
-        return $sports[$activity_id]->title;
-    }
-
-    private function get_sport_options()
-    {
-        $config_sports = midgardmvc_core::get_instance()->configuration->sports;
-        $options = array();
-        $mc = new midgard_collector('fi_openkeidas_diary_activity', 'metadata.deleted', false);
-        $mc->set_key_property('title');
-        $mc->add_value_property('id');
-        $mc->execute();
-        $sports = $mc->list_keys();
-        foreach ($config_sports as $sport)
-        {
-            if (!isset($sports[$sport]))
-            {
-                // Sync to DB
-                midgardmvc_core::get_instance()->authorization->enter_sudo('fi_openkeidas_diary'); 
-                $db_sport = new fi_openkeidas_diary_activity();
-                $db_sport->title = $sport;
-                $db_sport->create();
-                $options[] = array
-                (
-                    'description' => $sport,
-                    'value' => $db_sport->id,
-                );
-                midgardmvc_core::get_instance()->authorization->leave_sudo();
-                continue;
-            }
-
-            $options[] = array
-            (
-                'description' => $sport,
-                'value' => $mc->get_subkey($sport, 'id'),
-            );
-        }
-        return $options;
-    }
-
     public function get_list(array $args)
     {
         midgardmvc_core::get_instance()->authorization->require_user();
 
-        $this->data['form'] = midgardmvc_helper_forms::create('fi_openkeidas_diary_logs');
-        $this->data['form']->set_method('get');
+        $this->data['form'] = $this->get_list_form();
+        
+        $activity = null;
+        $activity_filter = $this->data['form']->sport->get_value();
+        if ($activity_filter)
+        {
+            $activity = fi_openkeidas_diary_activities::get($activity_filter);
+        }
 
-        $from = $this->data['form']->add_field('from', 'datetime', true);
+        $request = $this->request;
+        $this->data['entries'] = array_map
+        (
+            function ($entry) use ($request)
+            {
+                $entry->update_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_update', array('entry' => $entry->guid), $request);
+                $entry->delete_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_delete', array('entry' => $entry->guid), $request);
+                $entry->sport = fi_openkeidas_diary_activities::get_title($entry->activity);
+                return $entry;
+            },
+            fi_openkeidas_diary_logs::within
+            (
+                $this->data['form']->from->get_value(),
+                $this->data['form']->to->get_value(),
+                array(midgardmvc_core::get_instance()->authentication->get_person()->id),
+                $activity
+            )
+        );
+    }
+    
+    private function get_list_form()
+    {
+        $form = midgardmvc_helper_forms::create('fi_openkeidas_diary_logs');
+        $form->set_method('get');
+
+        $from = $form->add_field('from', 'datetime', true);
         $from_widget = $from->set_widget('date');
         $from_widget->set_label('Mistä');
         if (isset($_GET['from']))
@@ -72,7 +52,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
             $from->set_value(new midgard_datetime('30 days ago'));
         }
 
-        $to = $this->data['form']->add_field('to', 'datetime', true);
+        $to = $form->add_field('to', 'datetime', true);
         $to_widget = $to->set_widget('date');
         $to_widget->set_label('Mihin');
         if (isset($_GET['to']))
@@ -85,24 +65,27 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
             $to->set_value(new midgard_datetime());
         }
 
-        $qb = new midgard_query_builder('fi_openkeidas_diary_log');
-        $qb->add_constraint('date', '>', $from->get_value());
-        $qb->add_constraint('date', '<=', $to->get_value());
-        $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
-        $qb->add_order('date', 'DESC');
-
-        $request = $this->request;
-        $this->data['entries'] = array_map
+        $sport = $form->add_field('sport', 'integer');
+        if (isset($_GET['sport']))
+        {
+            $sport->set_value($_GET['sport']);
+            $sport->validate();
+        }
+        $sport_widget = $sport->set_widget('selectoption');
+        $sport_widget->set_label('Laji');
+        $options = fi_openkeidas_diary_activities::get_options();
+        array_unshift
         (
-            function ($entry) use ($request)
-            {
-                $entry->update_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_update', array('entry' => $entry->guid), $request);
-                $entry->delete_url = midgardmvc_core::get_instance()->dispatcher->generate_url('log_delete', array('entry' => $entry->guid), $request);
-                $entry->sport = fi_openkeidas_diary_controllers_log::get_sport($entry->activity);
-                return $entry;
-            },
-            $qb->execute()
+            $options,
+            array
+            (
+                'description' => 'Kaikki',
+                'value' => '',
+            )
         );
+        $sport_widget->set_options($options);
+        
+        return $form;
     }
 
     public function load_object(array $args)
@@ -137,7 +120,7 @@ class fi_openkeidas_diary_controllers_log extends midgardmvc_core_controllers_ba
         $sport->set_value($this->object->activity);
         $sport_widget = $sport->set_widget('selectoption');
         $sport_widget->set_label('Laji');
-        $sport_widget->set_options($this->get_sport_options());
+        $sport_widget->set_options(fi_openkeidas_diary_activities::get_options());
 
         $date = $this->form->add_field('date', 'datetime', true);
         $object_date = $this->object->date;
