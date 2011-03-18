@@ -5,7 +5,7 @@ class fi_openkeidas_diary_controllers_challenge extends midgardmvc_core_controll
     {
         midgardmvc_core::get_instance()->authorization->require_user();
 
-        $this->get_user_groups();
+        $this->data['user_groups'] = $this->get_user_groups();
 
         try {
             $this->object = new fi_openkeidas_diary_challenge($args['challenge']);
@@ -30,29 +30,25 @@ class fi_openkeidas_diary_controllers_challenge extends midgardmvc_core_controll
 
     private function get_user_groups()
     {
-        $this->data['user_groups'] = array();
         $qb = new midgard_query_builder('fi_openkeidas_groups_group_member');
         //$qb->add_constraint('admin', '=', true);
         $qb->add_constraint('metadata.isapproved', '=', true);
         $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
-        $memberships = $qb->execute();
-        if (empty($memberships))
-        {
-            return;
-        }
-
-        foreach ($memberships as $membership)
-        {
-            $group = new fi_openkeidas_groups_group($membership->grp);
-            $this->data['user_groups'][] = $group;
-        }
+        return array_map
+        (
+            function ($membership)
+            {
+                return new fi_openkeidas_groups_group($membership->grp);
+            },
+            $qb->execute()
+        );
     }
 
     public function prepare_new_object(array $args)
     {
         midgardmvc_core::get_instance()->authorization->require_user();
 
-        $this->get_user_groups();
+        $this->data['user_groups'] = $this->get_user_groups();
         if (empty($this->data['user_groups']))
         {
             throw new midgardmvc_exception_notfound("Only group members can challenge");
