@@ -26,5 +26,20 @@ jQuery(document).ready(function() {
     heightInput.change(function() {
         updateBMI(jQuery(this).val(), weightInput.val());
     });
+
+    var vo2Input = jQuery(statsForm.find('input[name="vo2max"]'));
+    var updateVo2 = function(cooper) {
+        if (cooper === 0) {
+           return;
+        }
+
+        var vo2max = (cooper - 505) / 45;
+        vo2Input.val(vo2max.toFixed(1));
+    }
+
+    var cooperInput = jQuery(statsForm.find('input[name="cooper"]'));
+    cooperInput.change(function() {
+        updateVo2(jQuery(this).val());
+    });
 });
 </script>

@@ -72,6 +72,7 @@ class fi_openkeidas_diary_controllers_stats
             'bmi' => $this->get_stat('bmi', 1),
             'weight' => $this->get_stat('weight', 1),
             'cooper' => $this->get_stat('cooper', 1),
+            'vo2max' => $this->get_stat('vo2max', 1),
         );
     }
 
@@ -79,7 +80,7 @@ class fi_openkeidas_diary_controllers_stats
     {
         midgardmvc_core::get_instance()->authorization->require_user();
 
-        $stat_types = array('bmi', 'weight');
+        $stat_types = array('bmi', 'weight', 'vo2max');
 
         $qb = new midgard_query_builder('fi_openkeidas_diary_stat');
         $qb->add_constraint('person', '=', midgardmvc_core::get_instance()->authentication->get_person()->id);
@@ -165,6 +166,7 @@ class fi_openkeidas_diary_controllers_stats
             'weight' => $this->get_stat('weight', 1),
             'height' => $this->get_stat('height', 1),
             'cooper' => $this->get_stat('cooper', 1),
+            'vo2max' => $this->get_stat('vo2max', 1),
         );
 
         $this->load_form();
@@ -213,6 +215,8 @@ class fi_openkeidas_diary_controllers_stats
                 return 'Paino';
             case 'height':
                 return 'Pituus';
+            case 'vo2max':
+                return 'Maksimi hapenottokyky';
             default:
                 return ucfirst($stat);
         }
@@ -245,5 +249,11 @@ class fi_openkeidas_diary_controllers_stats
         $cooper_widget = $cooper->set_widget('number');
         $cooper_widget->set_label('Cooper');
         $height_widget->set_placeholder('Cooperin testi (metriä juostu 12 minuutissa)');
+
+        $vo2max = $this->form->add_field('vo2max', 'float');
+        $vo2max->set_value($this->data['stats']['vo2max']);
+        $vo2max_widget = $vo2max->set_widget('number');
+        $vo2max_widget->set_label('Maksimi hapenottokyky');
+        $vo2max_widget->set_placeholder('Maksimi hapenottokyky (cooperin testin mukaan)');
     }
 }
