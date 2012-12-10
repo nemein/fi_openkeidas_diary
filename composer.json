@@ -1,0 +1,26 @@
+{
+  "name": "nemein/fi-openkeidas-diary",
+  "type": "library",
+  "description": "Activity diary component for Midgard MVC",
+  "license": "LGPL",
+  "authors": [
+    {
+      "name": "Henri Bergius",
+      "email": "henri.bergius@iki.fi",
+      "homepage": "http://bergie.iki.fi/"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=5.2.0"
+  },
+  "require": {
+    "zetacomponents/graph": "dev-master",
+    "midgard/midgardmvc-helper-forms": "dev-master",
+    "midgard/midgardmvc-core": "dev-master",
+    "ext-midgard2": ">=10.05.5"
+  },
+  "autoload": {
+    "classmap": ["."]
+  }
+}
